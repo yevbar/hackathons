@@ -14,6 +14,7 @@ import {
 } from '@hackclub/design-system'
 import EventCard from 'components/EventCard'
 import EmailListForm from 'components/EmailListForm'
+import EventCollection from 'components/EventCollection'
 import { distance, trackClick } from 'utils'
 import styled from 'styled-components'
 
@@ -47,7 +48,7 @@ const timeFilters = {
     name: 'from the 2017 - 2018 school year',
     function: event => new Date(event.start) > beginningOfSchoolYear,
   },
-  future: {
+  'future': {
     name: 'in the future',
     function: event => new Date(event.start) >= new Date(Date.now() - 864e5),
   },
@@ -55,6 +56,10 @@ const timeFilters = {
     name: 'from all time',
     function: event => true,
   },
+  'past': {
+    name: 'in the past',
+    function: event => new Date(event.start) < new Date(Date.now() - 864e5)
+  }
 }
 
 export default class extends Component {
@@ -240,7 +245,7 @@ export default class extends Component {
           </Container>
           <Container px={3}>
             <Flex mx={[1, 2, -3]} wrap justify="center">
-              {filteredEvents[timeFilter]
+              {filteredEvents['future']
                 .sort((a, b) => {
                   if (sortByProximity) {
                     const distToA = this.distanceTo(a.latitude, a.longitude)
@@ -250,6 +255,32 @@ export default class extends Component {
                     return distToA - distToB
                   } else {
                     return new Date(a.start) - new Date(b.start)
+                  }
+                })
+                .map(event => (
+                  <EventCard
+                    {...event}
+                    distanceTo={
+                      sortByProximity
+                        ? this.distanceTo(event.latitude, event.longitude).miles
+                        : null
+                    }
+                    key={event.id}
+                  />
+                ))}
+            </Flex>
+            <h1>Hello there!</h1>
+            <Flex mx={[1, 2, -3]} wrap justify="center">
+              {filteredEvents['past']
+                .sort((a, b) => {
+                  if (sortByProximity) {
+                    const distToA = this.distanceTo(a.latitude, a.longitude)
+                      .miles
+                    const distToB = this.distanceTo(b.latitude, b.longitude)
+                      .miles
+                    return distToA - distToB
+                  } else {
+                    return new Date(b.start) - new Date(a.start)
                   }
                 })
                 .map(event => (
