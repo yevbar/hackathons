@@ -62,13 +62,44 @@ const timeFilters = {
   }
 }
 
+const filteredEvents = {}
+
+function EventList(props) {
+  return (
+    <Flex mx={[1, 2, -3]} wrap justify="center">
+      {filteredEvents[props.filter]
+        .sort((a, b) => {
+          if (props.proximity === "yes") {
+            const distToA = this.distanceTo(a.latitude, a.longitude)
+              .miles
+            const distToB = this.distanceTo(b.latitude, b.longitude)
+              .miles
+            return distToA - distToB
+          } else {
+            return ((props.order === "yes") ? 1 : -1) * (new Date(a.start) - new Date(b.start))
+          }
+        })
+        .map(event => (
+          <EventCard
+            {...event}
+            distanceTo={
+              props.proximity === "yes"
+                ? this.distanceTo(event.latitude, event.longitude).miles
+                : null
+            }
+            key={event.id}
+          />
+        ))}
+    </Flex>
+  )
+}
+
 export default class extends Component {
   constructor(props) {
     super(props)
 
     this.events = props.data.allEventsJson.edges.map(({ node }) => node)
 
-    const filteredEvents = {}
     Object.keys(timeFilters).forEach(key => {
       filteredEvents[key] = this.events.filter(timeFilters[key].function)
     })
@@ -244,57 +275,9 @@ export default class extends Component {
             </Text>
           </Container>
           <Container px={3}>
-            <Flex mx={[1, 2, -3]} wrap justify="center">
-              {filteredEvents['future']
-                .sort((a, b) => {
-                  if (sortByProximity) {
-                    const distToA = this.distanceTo(a.latitude, a.longitude)
-                      .miles
-                    const distToB = this.distanceTo(b.latitude, b.longitude)
-                      .miles
-                    return distToA - distToB
-                  } else {
-                    return new Date(a.start) - new Date(b.start)
-                  }
-                })
-                .map(event => (
-                  <EventCard
-                    {...event}
-                    distanceTo={
-                      sortByProximity
-                        ? this.distanceTo(event.latitude, event.longitude).miles
-                        : null
-                    }
-                    key={event.id}
-                  />
-                ))}
-            </Flex>
+            <EventList filter="future" proximity={(sortByProximity)?"yes":"no"} order="yes"/>
             <h1>Hello there!</h1>
-            <Flex mx={[1, 2, -3]} wrap justify="center">
-              {filteredEvents['past']
-                .sort((a, b) => {
-                  if (sortByProximity) {
-                    const distToA = this.distanceTo(a.latitude, a.longitude)
-                      .miles
-                    const distToB = this.distanceTo(b.latitude, b.longitude)
-                      .miles
-                    return distToA - distToB
-                  } else {
-                    return new Date(b.start) - new Date(a.start)
-                  }
-                })
-                .map(event => (
-                  <EventCard
-                    {...event}
-                    distanceTo={
-                      sortByProximity
-                        ? this.distanceTo(event.latitude, event.longitude).miles
-                        : null
-                    }
-                    key={event.id}
-                  />
-                ))}
-            </Flex>
+            <EventList filter="past" proximity={(sortByProximity)?"yes":"no"} order="no"/>
           </Container>
         </Box>
         <Container maxWidth={40} px={[2, 3]} py={5} align="center">

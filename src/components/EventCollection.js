@@ -1,7 +1,7 @@
-import * as react from 'react'
+import React from 'react'
 
-class EventCollection extends react.Component{
-  render() {
+function EventCollection(props){
+    return <h1>HEYO</h1>
     let eventCollection = props.collection;
     let proximity = props.prox;
     let ordering = props.order;
@@ -35,5 +35,4 @@ class EventCollection extends react.Component{
           ))}
       </Flex>
     );
-  }
 }
