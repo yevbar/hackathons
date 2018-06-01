@@ -33,27 +33,10 @@ const HideOnMobile = Box.extend`
   }
 `
 
-// This spagetti filters out events from before this school year
-let beginningOfSchoolYear
-const now = new Date()
-if (now.getMonth() < 7 /* august */) {
-  beginningOfSchoolYear = new Date(now.getFullYear() - 1, 7)
-} else {
-  beginningOfSchoolYear = new Date(now.getFullYear(), 7)
-}
-
 const timeFilters = {
-  'school year': {
-    name: 'from the 2017 - 2018 school year',
-    function: event => new Date(event.start) > beginningOfSchoolYear,
-  },
   'future': {
     name: 'in the future',
     function: event => new Date(event.start) >= new Date(Date.now() - 864e5),
-  },
-  'all time': {
-    name: 'from all time',
-    function: event => true,
   },
   'past': {
     name: 'in the past',
@@ -61,36 +44,59 @@ const timeFilters = {
   }
 }
 
+/**
+Legacy card layout
+
+<Flex mx={[1, 2, -3]} wrap justify="center">
+  {filteredEvents['past']
+    .sort((a, b) => {
+      if (sortByProximity) {
+        const distToA = this.distanceTo(a.latitude, a.longitude)
+          .miles
+        const distToB = this.distanceTo(b.latitude, b.longitude)
+          .miles
+        return distToA - distToB
+      } else {
+        return new Date(b.start) - new Date(a.start)
+      }
+    })
+    .map(event => (
+      <EventCard
+        {...event}
+        distanceTo={
+          sortByProximity
+            ? this.distanceTo(event.latitude, event.longitude).miles
+            : null
+        }
+        key={event.id}
+      />
+    ))}
+</Flex>
+*/
+
 const filteredEvents = {}
 
 function EventList(props) {
-  return (
-    <Flex mx={[1, 2, -3]} wrap justify="center">
-      {filteredEvents[props.filter]
-        .sort((a, b) => {
-          if (props.proximity === "yes") {
-            const distToA = this.distanceTo(a.latitude, a.longitude)
-              .miles
-            const distToB = this.distanceTo(b.latitude, b.longitude)
-              .miles
-            return distToA - distToB
-          } else {
-            return ((props.order === "yes") ? 1 : -1) * (new Date(a.start) - new Date(b.start))
-          }
-        })
-        .map(event => (
-          <EventCard
-            {...event}
-            distanceTo={
-              props.proximity === "yes"
-                ? this.distanceTo(event.latitude, event.longitude).miles
-                : null
+  let output = <h1>Hello</h1>
+  try {
+    output = (
+      <Flex mx={[1, 2, -3]} wrap justify="center">
+        {filteredEvents[props.filter]
+          .sort((a, b) => {
+            ((props.order === "yes") ? 1 : -1) * (new Date(a.start) - new Date(b.start))
             }
-            key={event.id}
-          />
-        ))}
-    </Flex>
-  )
+          )
+          .map(event => (
+            <EventCard
+              {...event}
+              key={event.id}
+            />
+          ))}
+      </Flex>
+    );
+  } catch (e) {output = <h1>Something went wrong, please reload the page</h1>}
+
+  return output
 }
 
 export default class extends Component {
@@ -108,7 +114,6 @@ export default class extends Component {
       searchLat: null || props.searchLat,
       searchLng: null || props.searchLng,
       formattedAddress: undefined,
-      timeFilter: 'school year',
       sortByProximity: false,
     }
 
@@ -117,14 +122,6 @@ export default class extends Component {
       state: new Set(this.events.map(event => event.parsed_state)).size,
       country: new Set(this.events.map(event => event.parsed_country)).size,
     }
-  }
-
-  distanceTo(eventLat, eventLng) {
-    const { searchLat, searchLng } = this.state
-    if (!searchLat || !searchLng) {
-      return undefined
-    }
-    return distance(eventLat, eventLng, searchLat, searchLng)
   }
 
   setCurrentLocation() {
@@ -198,7 +195,6 @@ export default class extends Component {
   render() {
     const {
       formattedAddress,
-      timeFilter,
       filteredEvents,
       sortByProximity,
     } = this.state
@@ -239,43 +235,15 @@ export default class extends Component {
               countries.
             </Text>
             <EmailListForm location={formattedAddress} />
-            <Text color="muted" mt={4} mb={3}>
-              Showing events{' '}
-              <Link
-                href="#"
-                onClick={e => {
-                  e.preventDefault()
-                  const fKeys = Object.keys(timeFilters)
-                  const index = (fKeys.indexOf(timeFilter) + 1) % fKeys.length
-                  this.setState({
-                    timeFilter: fKeys[index],
-                  })
-                }}
-              >
-                {timeFilters[timeFilter].name}
-              </Link>.
-            </Text>
-            <Text color="muted" mt={3} mb={4}>
-              Sorting by{' '}
-              <Link
-                href="#"
-                onClick={e => {
-                  e.preventDefault()
-                  if (sortByProximity) {
-                    this.setState({ sortByProximity: false })
-                  } else {
-                    this.setCurrentLocation()
-                  }
-                }}
-              >
-                {sortByProximity ? `proximity` : 'date'}
-              </Link>
-              {sortByProximity && formattedAddress && ` to ${formattedAddress}`}.
-            </Text>
+
           </Container>
           <Container px={3}>
             <EventList filter="future" proximity={(sortByProximity)?"yes":"no"} order="yes"/>
-            <h1>Hello there!</h1>
+            <br/>
+            <Text f={4} mx="auto" align="center">
+              These events have already happened
+            </Text>
+            <br/>
             <EventList filter="past" proximity={(sortByProximity)?"yes":"no"} order="no"/>
           </Container>
         </Box>
