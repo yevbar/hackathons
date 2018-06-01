@@ -14,7 +14,6 @@ import {
 } from '@hackclub/design-system'
 import EventCard from 'components/EventCard'
 import EmailListForm from 'components/EmailListForm'
-import EventCollection from 'components/EventCollection'
 import { distance, trackClick } from 'utils'
 import styled from 'styled-components'
 
