@@ -83,7 +83,7 @@ function EventList(props) {
       <Flex mx={[1, 2, -3]} wrap justify="center">
         {filteredEvents[props.filter]
           .sort((a, b) => {
-            ((props.order === "yes") ? 1 : -1) * (new Date(a.start) - new Date(b.start))
+            (new Date(a.start) - new Date(b.start))
             }
           )
           .map(event => (
